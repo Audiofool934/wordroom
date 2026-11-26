@@ -1,0 +1,17 @@
+.runtime/
+.qa/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+*.sqlite3
+*.sqlite3-*
+*.private.*
+*.pem
+preview.png
+# Word data is built or supplied locally and never committed.
+data/wordlist_families.json
+public/wordlist-super-picks.json

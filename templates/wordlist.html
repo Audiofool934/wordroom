@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fdf6e3" data-light="#fdf6e3" data-dark="#002b36">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="GRE Words">
+  <title>GRE Words · Wordroom</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <script src="/theme.js"></script>
+  <script src="/wordlist-head.js"></script>
+  <link rel="stylesheet" href="/wordlist.css">
+  <script src="/wordlist.js" defer></script>
+</head>
+<body>
+  <main aria-label="GRE word list">
+    <div class="toolbar">
+      <details id="jump">
+        <summary aria-label="Choose a group"><span id="current-group">Group 01</span><i aria-hidden="true"></i></summary>
+        <nav aria-label="Groups">$group_links</nav>
+      </details>
+      <div class="filters" id="filters" hidden>
+        <label class="search">
+          <span class="search-icon" aria-hidden="true"></span>
+          <input id="query" type="search" aria-label="Search words or meanings" placeholder="Search" maxlength="256" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+        </label>
+        <fieldset class="segmented" id="view" aria-label="Which words to show" disabled>
+          <label><input type="radio" name="view" value="active" checked><span>Words <small data-count="active">$total</small></span></label>
+          <label><input type="radio" name="view" value="review"><span>Review <small data-count="review"></small></span></label>
+          <label><input type="radio" name="view" value="archive"><span>Archived <small data-count="archive"></small></span></label>
+        </fieldset>
+      </div>
+      <button type="button" id="sentences" aria-pressed="false" aria-label="Show example sentences" title="Example sentences" hidden>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 9h14M3 13h14M3 17h8"/></svg>
+      </button>
+      <details id="more">
+        <summary aria-label="More options"><span class="ellipsis" aria-hidden="true"><i></i><i></i><i></i></span></summary>
+        <div class="menu">
+          <a id="resume" hidden></a>
+          <a id="online" href="/" hidden>Open the online list</a>
+          <fieldset class="choices" id="collection" hidden disabled>
+            <legend>Word set</legend>
+            <label><input type="radio" name="collection" value="all" checked><span>All words<small>The full word list</small></span><b data-set="all">$total</b></label>
+            <label><input type="radio" name="collection" value="super"><span>Super Picks<small>From 200 Super Picks questions</small></span><b data-set="super"></b></label>
+            <label><input type="radio" name="collection" value="completion"><span>Completion<small>Picks in answer choices</small></span><b data-set="completion"></b></label>
+            <label><input type="radio" name="collection" value="reading"><span>Reading<small>Picks in passages and stems</small></span><b data-set="reading"></b></label>
+          </fieldset>
+          <label class="toggle" hidden><span>Show meanings in list</span><input id="list-meanings" type="checkbox" role="switch"></label>
+          <div class="appearance" hidden>
+            <span id="appearance-label">Appearance</span>
+            <fieldset class="segmented" id="appearance" aria-labelledby="appearance-label">
+              <label><input type="radio" name="appearance" value="system"><span>Auto</span></label>
+              <label><input type="radio" name="appearance" value="light"><span>Light</span></label>
+              <label><input type="radio" name="appearance" value="dark"><span>Dark</span></label>
+            </fieldset>
+          </div>
+        </div>
+      </details>
+    </div>
+    <p id="result" role="status" hidden></p>
+    <div id="entries">$word_groups</div>
+  </main>
+  <div class="notice" hidden><span role="status"></span><button type="button" hidden></button></div>
+</body>
+</html>
