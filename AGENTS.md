@@ -12,6 +12,7 @@ Work on feature branches and open pull requests; merging runs the tests and depl
 - `scripts/build_wordlist.py` builds `wordlist.html` and `wordlist-details.json` from a word database into the data directory.
 - `scripts/generate_wordlist_sentences.py` and `scripts/generate_wordlist_relations.py` add generated content.
 - `public/` and `templates/` contain plain HTML, CSS and JavaScript, with no build step.
+- `docs/learning-system.md` describes where Wordroom is going: an LLM-run learning system for any word list. `scripts/prototype_trail.py` is its first prototype.
 
 ## Data
 
