@@ -72,6 +72,17 @@ class WordlistMarksTest(unittest.TestCase):
             self.mark("plus", position={"row": "bad"})
         self.assertEqual(self.store.wordlist_state(), before)
 
+    def test_marked_word_takes_the_place_to_review_and_back(self):
+        row = {"row": "w-35-8", "view": "active"}
+        self.assertEqual(self.mark("plus", position=row)["position"]["view"], "review")
+        self.assertEqual(self.mark("plus", position={**row, "view": "review"})["position"]["view"], "review")
+        self.assertEqual(self.mark("minus", position={**row, "view": "review"})["position"]["view"], "review")
+        self.assertEqual(self.mark("minus", position={**row, "view": "review"})["position"]["view"], "active")
+
+    def test_legacy_last_mark_for_review(self):
+        self.mark("plus")
+        self.assertEqual(self.store.wordlist_state()["position"]["view"], "review")
+
     def test_collection_persists_through_scoring_and_can_be_cleared(self):
         row = {"row": "w-1-4", "collection": "reading"}
         saved = self.store.save_wordlist_position({**row, "base": 0})

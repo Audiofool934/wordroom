@@ -60,7 +60,8 @@ class Store:
             if not position:
                 last = db.execute("SELECT word,score FROM wordlist_marks ORDER BY revision DESC LIMIT 1").fetchone()
                 if last:
-                    position = {"word": last["word"], "view": "archive" if last["score"] < 0 else "active", "revision": 0}
+                    position = {"word": last["word"], "view": ("archive" if last["score"] < 0 else "review" if last["score"] > 0 else "active"),
+                                "revision": 0}
             return {"scores": scores, "position": position}
 
     def wordlist_scores(self):
@@ -92,6 +93,8 @@ class Store:
             view = "archive"
         elif view == "archive" or (view == "review" and score == 0):
             view = "active"
+        elif view == "active" and score > 0:
+            view = "review"
         position = {"row": row, "view": view, "query": query, "expanded": expanded, "revision": revision + 1}
         if collection != "all":
             position["collection"] = collection

@@ -20,7 +20,7 @@ The interface is English, in the Nord palette, light and dark.
   Under it come the Chinese translation, a short structure note, the word's meaning, and its family, synonyms, antonyms and related words.
   A related word that is in the list is a link to it.
 - **Scores.**
-  + and − set a score; words above zero appear under Review.
+  + and − set a score; words above zero move to Review, with Undo, and come back to Words at zero.
   Swipe a row left to archive it, with Undo; archived words can be restored later.
 - **Your place.**
   Scores sync by spelling and the last row you were on is saved, so another device opens where you stopped.
