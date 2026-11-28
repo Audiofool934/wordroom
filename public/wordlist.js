@@ -48,7 +48,8 @@
 
   // Pronunciation uses the device's own English voice, so nothing leaves the phone.
   const speech = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window ? window.speechSynthesis : null;
-  let voice = null, speaking = null;
+  const pairGapMs = 600;
+  let voice = null, playback = null;
   function pickVoice() {
     if (!speech) return;
     const rank = v => (/premium/i.test(v.name) ? 4 : /enhanced/i.test(v.name) ? 3 : 0)
@@ -61,26 +62,47 @@
     pickVoice();
     speech.addEventListener?.("voiceschanged", pickVoice);
   }
+  function clearPlayback() {
+    if (!playback) return;
+    clearTimeout(playback.timer);
+    playback.target.classList.remove("speaking");
+    playback = null;
+  }
   function stopSpeaking() {
-    speaking?.classList.remove("speaking");
-    speaking = null;
+    clearPlayback();
     speech?.cancel();
   }
-  function say(text, button, rate) {
+  function say(parts, target, rate) {
     if (!speech) return;
-    const again = speaking === button;
+    const again = playback?.target === target;
     stopSpeaking();
-    if (again && button?.dataset.speak === "sentence") return; // A second tap stops a sentence.
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    if (voice) utterance.voice = voice;
-    utterance.rate = rate;
-    speaking = button;
-    button?.classList.add("speaking");
-    const done = () => { if (speaking === button) { button?.classList.remove("speaking"); speaking = null; } };
-    utterance.onend = done;
-    utterance.onerror = done;
-    speech.speak(utterance);
+    if (again && target.dataset.speak === "sentence") return; // A second tap stops a sentence.
+    const session = {target, timer: null, utterance: null};
+    playback = session;
+    target.classList.add("speaking");
+
+    function speakPart(index) {
+      if (playback !== session) return;
+      const utterance = new SpeechSynthesisUtterance(parts[index]);
+      session.utterance = utterance;
+      utterance.lang = "en-US";
+      if (voice) utterance.voice = voice;
+      utterance.rate = rate;
+      utterance.onend = () => {
+        if (playback?.utterance !== utterance) return;
+        if (index + 1 === parts.length) clearPlayback();
+        else session.timer = setTimeout(() => speakPart(index + 1), pairGapMs);
+      };
+      utterance.onerror = () => { if (playback?.utterance === utterance) clearPlayback(); };
+      speech.speak(utterance);
+    }
+    speakPart(0);
+  }
+  function sayWord(row) {
+    const head = row.querySelector(".head b");
+    const parts = row.classList.contains("pair")
+      ? Array.from(head.children, term => term.textContent) : [head.textContent];
+    say(parts, row.querySelector(".ipa") || head, .85);
   }
   const speakerIcon = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z"/>'
     + '<path d="M10.3 5.2a.75.75 0 0 1 1.06.04 4 4 0 0 1 0 5.52.75.75 0 1 1-1.1-1.02 2.5 2.5 0 0 0 0-3.48.75.75 0 0 1 .04-1.06z"/></svg>';
@@ -395,6 +417,7 @@
     linkFamilies();
     if (!activeGroup || activeGroup.section.hidden) setGroup(first || null);
     if (revealed?.hidden) clearSwipe();
+    if (playback?.target.closest(".word")?.hidden) stopSpeaking();
     return first;
   }
   function applyScore(word, score, revision) {
@@ -616,7 +639,7 @@
     extras(row);
     row.querySelector("details").open = true;
     row.scrollIntoView({block: "start"});
-    say(row.querySelector("b").textContent, row.querySelector(".ipa"), .85);
+    sayWord(row);
     savePlace(bookmark(row), true);
   }
   resume.addEventListener("click", e => {
@@ -652,7 +675,7 @@
     }
     const speaker = e.target.closest("button[data-speak]");
     if (speaker) {
-      say(speaker.closest(".word").querySelector(".sentence").textContent, speaker, .95);
+      say([speaker.closest(".word").querySelector(".sentence").textContent], speaker, .95);
       return;
     }
     const button = e.target.closest("button[data-action]");
@@ -664,8 +687,8 @@
       // Opening a row also pronounces it; this runs inside the tap, which iOS requires for speech.
       if (!row.querySelector("details").open) {
         extras(row);
-        say(row.querySelector("b").textContent, row.querySelector(".ipa"), .85);
-      } else if (speaking && row.contains(speaking)) stopSpeaking();
+        sayWord(row);
+      } else if (playback && row.contains(playback.target)) stopSpeaking();
       // The default summary action runs after the click handler.
       setTimeout(() => { if (row.isConnected) savePlace(bookmark(row), true); }, 0);
     }
