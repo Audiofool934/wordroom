@@ -89,7 +89,12 @@ def structured(parts, word):
         inner = escape(text)
         if not found and pattern.search(text):
             inner, found = marked(text, word), True
-        out.append(inner if role == "other" else f'<span class="s-{role}">{inner}</span>')
+        if role == "other" or not text.strip():
+            out.append(inner)
+            continue
+        # Spaces stay outside the span, so an underline starts and ends on the words themselves.
+        lead, trail = inner[:len(inner) - len(inner.lstrip())], inner[len(inner.rstrip()):]
+        out.append(f'{lead}<span class="s-{role}">{inner.strip()}</span>{trail}')
     return "".join(out)
 
 
