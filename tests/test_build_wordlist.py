@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 import sqlite3
 import sys
@@ -104,6 +105,31 @@ class SentenceTests(unittest.TestCase):
 
 
 class RenderTests(unittest.TestCase):
+    def test_pair_choice_is_optional_and_keeps_phrases_and_distinct_partners(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            links, sections = [], []
+            self.assertEqual(build_wordlist.render_pairs(directory, links, sections), "")
+            pairs = [
+                {"words": ["turn up", partner], "glosses": ["出现", "到达"],
+                 "meaning": "义项 <test>", "pages": [4, 7]}
+                for partner in ["arrive", "appear"]
+            ]
+            path = directory / "wordlist_pairs.private.json"
+            path.write_text(json.dumps(pairs))
+            choice = build_wordlist.render_pairs(directory, links, sections)
+            self.assertIn('data-set="pairs">2', choice)
+            self.assertEqual(len(links), 1)
+            self.assertEqual(sections[0].count('class="word pair"'), 2)
+            self.assertIn("义项 &lt;test&gt;", sections[0])
+            self.assertIn("第 4、7 页", sections[0])
+            ids = re.findall(r'id="(p-[a-f0-9]+)"', sections[0])
+            self.assertEqual(len(set(ids)), 2)
+            path.write_text(json.dumps(pairs[::-1]))
+            reordered = []
+            build_wordlist.render_pairs(directory, [], reordered)
+            self.assertEqual(re.findall(r'id="(p-[a-f0-9]+)"', reordered[0]), ids[::-1])
+
     def test_page_has_closed_rows_only_and_details_carry_the_rest(self):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "bb.sqlite3"
@@ -131,7 +157,7 @@ class StandaloneTests(unittest.TestCase):
     def page(self):
         from string import Template
         template = Template((build_wordlist.ROOT / "templates/wordlist.html").read_text(encoding="utf-8"))
-        return template.substitute(group_links="", word_groups="", total="0")
+        return template.substitute(pair_choice="", group_links="", word_groups="", total="0")
 
     def test_without_an_online_url_there_is_no_online_link(self):
         html = build_wordlist.standalone(self.page(), {})
