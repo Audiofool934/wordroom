@@ -296,3 +296,13 @@ details[open] .sentence .s-phrase, .legend .s-phrase { color: var(--phrase); }
 .setup h1 { font: 500 1.75rem/1.3 var(--serif); color: var(--ink); margin: 0 0 1rem; }
 .setup pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: .8rem 1rem; border-radius: .7rem;
   background: color-mix(in srgb, var(--fill) 70%, transparent); color: var(--ink); font-size: .875rem; }
+
+/* Keep both expressions visible beside the score control, including on phones. */
+.pair-view #sentences { display: none; }
+.pair .head b { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+.pair .head b > span { display: inline-block; max-width: 100%; }
+.pair details[open] summary .meaning { display: block; margin-right: 0; }
+.pair .example span[lang="en"] { color: var(--ink); }
+@media (max-width: 40rem) {
+  .pair-view .search { grid-column: 2 / 4; }
+}

@@ -13,8 +13,10 @@
   const endpoint = "/api/wordlist/scores";
   const scores = new Map();
   const collections = new Map();
-  const collectionNames = {all: "Words", super: "Picks", fill: "Completion", completion: "Choices", reading: "Reading"};
+  const collectionNames = {all: "Words", pairs: "Pairs", super: "Picks", fill: "Completion", completion: "Choices", reading: "Reading"};
   const collectionPicker = $("#collection");
+  const hasPairs = Boolean(collectionPicker.querySelector('[data-set="pairs"]'));
+  if (hasPairs) collectionPicker.hidden = false;
   const activeLabel = view.querySelector('input[value="active"] + span').firstChild;
   let collection = "all", collectionLoad;
   let entryCollection = new URLSearchParams(location.search).get("collection");
@@ -24,7 +26,8 @@
     rows: [...section.querySelectorAll(".word")].map(row => {
       const word = row.querySelector("b").textContent;
       const text = (word + " " + row.querySelector(".meaning").textContent).toLowerCase();
-      return {row, word, text};
+      const glosses = row.classList.contains("pair") ? row.querySelector(".example").textContent.toLowerCase() : "";
+      return {row, word, text: text + " " + glosses};
     }),
   }));
   const groupByElement = new Map(groups.map(g => [g.section, g]));
@@ -104,7 +107,6 @@
           count.textContent = words.size.toLocaleString("en-US");
           count.closest("label").hidden = false;
         }
-        selectCollection(collection);
         collectionPicker.hidden = false;
       }).catch(error => {
         collectionLoad = null;
@@ -114,7 +116,8 @@
     return collectionLoad;
   }
   function selectCollection(name) {
-    collection = collections.has(name) ? name : "all";
+    collection = (name === "pairs" && hasPairs) || collections.has(name) ? name : "all";
+    document.documentElement.classList.toggle("pair-view", collection === "pairs");
     const radio = [...collectionPicker.elements].find(input => input.value === collection);
     if (radio) radio.checked = true;
     activeLabel.textContent = collection === "all" ? "Words " : collectionNames[collection] + " ";
@@ -125,7 +128,10 @@
       history.replaceState(history.state, "", url);
     }
   }
-  function inCollection(word) { return collection === "all" || collections.get(collection).has(word); }
+  function inCollection(row, word) {
+    if (row.classList.contains("pair")) return collection === "pairs";
+    return collection === "all" || Boolean(collections.get(collection)?.has(word));
+  }
   function selectedView() { return view.querySelector(":checked").value; }
   function selectView(name) {
     const radio = [...view.elements].find(input => input.value === name);
@@ -170,7 +176,7 @@
     if (!row) return;
     const word = row.querySelector("b").textContent;
     selectCollection(position.collection || "all");
-    if (!inCollection(word)) selectCollection("all");
+    if (!inCollection(row, word)) selectCollection("all");
     selectView(position.view || "active");
     query.value = position.query || "";
     filter();
@@ -355,7 +361,7 @@
       let count = 0;
       for (const {row, word, text} of group.rows) {
         const score = scoreOf(word);
-        const included = inCollection(word);
+        const included = inCollection(row, word);
         if (included) {
           if (score >= 0) totals.active++;
           if (score >= 1) totals.review++;
@@ -370,7 +376,7 @@
       if (group.section.hidden === Boolean(count)) group.section.hidden = !count;
       group.link.hidden = !count;
       group.section.style.setProperty("--rows", String(count));
-      const label = plural(count, "word");
+      const label = plural(count, collection === "pairs" ? "pair" : "word");
       if (group.label.textContent !== label) group.label.textContent = label;
       if (count && !first) first = group;
       matches += count;
@@ -424,7 +430,7 @@
       collectionPicker.disabled = false;
       changed = true;
     }
-    if (entryCollection && collections.size && started === interaction) {
+    if (entryCollection && (collections.size || hasPairs) && started === interaction) {
       const requested = entryCollection;
       entryCollection = null;
       const saved = position || localBookmark();
@@ -444,7 +450,7 @@
     if (changed) filter();
     if ((initial || follow) && started === interaction) {
       const target = position || {...localBookmark(), revision: 0};
-      if (target.collection && target.collection !== "all" && !collections.size && !local) return;
+      if (target.collection && target.collection !== "all" && target.collection !== "pairs" && !collections.size && !local) return;
       if (rowFor(target) && (initial || (target.revision ?? 0) > appliedRevision)
           && (target.revision ?? 0) >= (confirmed?.revision ?? 0)) {
         accept(target);
@@ -551,6 +557,10 @@
   view.addEventListener("change", switchView);
   collectionPicker.addEventListener("change", e => {
     entryCollection = null;
+    if (e.target.value === "pairs" || collection === "pairs") {
+      query.value = "";
+      selectView("active");
+    }
     selectCollection(e.target.value);
     switchView(e);
   });
@@ -597,7 +607,7 @@
   function openRelated(id) {
     const row = document.getElementById(id);
     if (!row) return;
-    if (!inCollection(row.querySelector("b").textContent)) selectCollection("all");
+    if (!inCollection(row, row.querySelector("b").textContent)) selectCollection("all");
     if (row.hidden) {
       query.value = "";
       view.querySelector('input[value="' + (scoreOf(row.querySelector("b").textContent) === -1 ? "archive" : "active") + '"]').checked = true;
