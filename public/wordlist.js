@@ -176,7 +176,7 @@
     filter();
     if (row.hidden) {
       query.value = "";
-      selectView(scoreOf(row.querySelector("b").textContent) < 0 ? "archive" : "active");
+      selectView(viewFor(scoreOf(row.querySelector("b").textContent)));
       filter();
     }
     const group = groupByElement.get(row.closest(".group"));
@@ -219,6 +219,8 @@
     noticeAction?.();
   });
   function scoreOf(word) { return scores.get(word)?.[0] ?? 0; }
+  // Each word is in exactly one view: unmarked words, words marked for review, or archived words.
+  function viewFor(score) { return score < 0 ? "archive" : score > 0 ? "review" : "active"; }
   function displayRow(row, score) {
     if (row.dataset.score === String(score)) return;
     row.dataset.score = score;
@@ -356,12 +358,8 @@
       for (const {row, word, text} of group.rows) {
         const score = scoreOf(word);
         const included = inCollection(word);
-        if (included) {
-          if (score >= 0) totals.active++;
-          if (score >= 1) totals.review++;
-          if (score === -1) totals.archive++;
-        }
-        const inView = range === "archive" ? score === -1 : range === "review" ? score >= 1 : score >= 0;
+        if (included) totals[viewFor(score)]++;
+        const inView = viewFor(score) === range;
         const visible = included && inView && (!term || text.includes(term));
         if (row.hidden === visible) row.hidden = !visible;
         if (visible) count++;
@@ -385,7 +383,7 @@
       term ? "No word or meaning matches “" + query.value.trim() + "”." :
       range === "review" ? "Nothing to review yet. Tap + on a word you're unsure of." :
       range === "archive" ? "No archived words yet. Swipe a word left to archive it." :
-      collection === "all" ? "You've archived every word." : "All words in this collection are archived.";
+      collection === "all" ? "Every word is in Review or Archived." : "Every word in this collection is in Review or Archived.";
     linkFamilies();
     if (!activeGroup || activeGroup.section.hidden) setGroup(first || null);
     if (revealed?.hidden) clearSwipe();
@@ -507,8 +505,10 @@
         if (local) {
           const edit = () => localEdit(word, action, undoRevision);
           data = navigator.locks ? await navigator.locks.request(scoreKey, edit) : edit();
+          // Like the server: a word that leaves its view takes the saved place with it.
           const range = data.score === -1 ? "archive" : position.view === "archive" ||
-            (position.view === "review" && data.score === 0) ? "active" : position.view;
+            (position.view === "review" && data.score === 0) ? "active" :
+            position.view === "active" && data.score > 0 ? "review" : position.view;
           data.position = {...position, view: range, revision: (localBookmark()?.revision || 0) + 1};
         } else {
           data = await post({word, action, undo_revision: undoRevision, request_id: requestId, position});
@@ -519,6 +519,12 @@
         if (applyScore(word, data.score, data.revision)) filter();
         if (data.score === -1) showNotice("Archived " + word, "Undo", () => change(row, "undo", data.revision));
         if (action === "restore" || action === "undo") showNotice(word + " is back in the list");
+        if (action === "plus" && data.previous === 0) showNotice("Moved " + word + " to Review", "Undo", () => change(row, "minus"));
+        if (action === "minus" && data.score === 0) {
+          // Leaving Review can be undone; undoing a move to Review only confirms it.
+          if (position.view === "review") showNotice(word + " is back in the list", "Undo", () => change(row, "plus"));
+          else showNotice(word + " is back in the list");
+        }
       } catch (err) {
         try { await refresh(); } catch { /* Keep the last confirmed state. */ }
         if (err.status === 409 || err.status === 401 || err.status === 403) showNotice(explain(err));
@@ -600,7 +606,7 @@
     if (!inCollection(row.querySelector("b").textContent)) selectCollection("all");
     if (row.hidden) {
       query.value = "";
-      view.querySelector('input[value="' + (scoreOf(row.querySelector("b").textContent) === -1 ? "archive" : "active") + '"]').checked = true;
+      view.querySelector('input[value="' + viewFor(scoreOf(row.querySelector("b").textContent)) + '"]').checked = true;
       filter();
     }
     extras(row);
