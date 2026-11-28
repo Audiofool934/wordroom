@@ -22,8 +22,8 @@
     const theme = getTheme();
     document.documentElement.dataset.theme = theme;
     document.querySelectorAll('meta[name="theme-color"]').forEach(meta => {
-      // A page names its bar colours; Solarized paper is the fallback.
-      meta.content = meta.dataset?.[theme] || (theme === "dark" ? "#002b36" : "#fdf6e3");
+      // A page names its bar colours; Nord Snow Storm and Polar Night are the fallback.
+      meta.content = meta.dataset?.[theme] || (theme === "dark" ? "#2e3440" : "#eceff4");
     });
     window.dispatchEvent(new window.CustomEvent("wordroom:themechange", {
       detail: {preference, theme},

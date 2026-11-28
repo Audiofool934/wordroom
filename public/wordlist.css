@@ -1,42 +1,61 @@
-/* Solarized paper. Text tones are chosen to keep 4.5:1 contrast; the accent is
-   Solarized blue, darkened on light paper and lightened on dark paper for the same reason. */
+/* Nord (nordtheme.com). Each role maps onto a Nord colour. Where a Nord colour is too light or too
+   dark for 4.5:1 text contrast, the role darkens it with black (light mode, which keeps its hue) or
+   lightens it with nord6 (dark mode). Coloured text also keeps 4.5:1 on the warmest score tint. */
 :root {
   color-scheme: light;
   font-family: -apple-system, BlinkMacSystemFont, system-ui, "PingFang SC", "Hiragino Sans GB", sans-serif;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
-  --paper: #fdf6e3;   /* base3 */
-  --fill: #eee8d5;    /* base2: pressed states and control wells, never behind small grey text */
-  --line: #e3dbc2;
-  --ink: #073642;     /* base02: headwords */
-  --text: #586e75;    /* base01: meanings and everything else */
-  --accent: #1a6998;  /* blue, darkened */
-  --toast: #073642; --toast-text: #fdf6e3;
-  --archive: #a3360f;
-  --shadow: 0 10px 30px rgb(7 54 66 / .14);
+  /* Polar Night, Snow Storm, Frost and Aurora */
+  --nord0: #2e3440; --nord1: #3b4252; --nord2: #434c5e; --nord3: #4c566a;
+  --nord4: #d8dee9; --nord5: #e5e9f0; --nord6: #eceff4;
+  --nord7: #8fbcbb; --nord8: #88c0d0; --nord9: #81a1c1; --nord10: #5e81ac;
+  --nord11: #bf616a; --nord12: #d08770; --nord13: #ebcb8b; --nord14: #a3be8c; --nord15: #b48ead;
+
+  --paper: var(--nord6);   /* page background */
+  --fill: var(--nord4);    /* pressed states and control wells */
+  --line: var(--nord4);
+  --raised: var(--nord6);  /* the chosen segment of a segmented control */
+  --ink: var(--nord0);     /* headwords and reading text: 10.8:1 */
+  --text: var(--nord3);    /* secondary text: 6.4:1 */
+  --accent: color-mix(in srgb, var(--nord10) 70%, black);  /* 6.1:1, 5.2:1 on the warmest tint */
+  --clause: color-mix(in srgb, var(--nord15) 60%, black);
+  --phrase: color-mix(in srgb, var(--nord7) 50%, black);
+  --archive: color-mix(in srgb, var(--nord11) 75%, var(--nord0));  /* nord6 text on it: 4.7:1 */
+  --on-archive: var(--nord6);
+  --toast: var(--nord0); --toast-text: var(--nord6);
+  --knob: #fff;
+  --shadow: 0 10px 30px rgb(46 52 64 / .14);
+  /* Score tints: Aurora yellow, then orange, mixed into the paper. */
+  --tone1: color-mix(in srgb, var(--nord13) 20%, var(--paper));
+  --tone2: color-mix(in srgb, var(--nord13) 34%, var(--paper));
+  --tone3: color-mix(in srgb, var(--nord12) 20%, var(--paper));
   --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
   --left: max(1.25rem, env(safe-area-inset-left), calc((100% - 52rem) / 2));
   --right: max(1.25rem, env(safe-area-inset-right), calc((100% - 52rem) / 2));
   --toolbar-h: calc(3.5rem + env(safe-area-inset-top));
   --controls: 7.25rem;
-  --tint1: 13%; --tint2: 26%; --tint3: 24%;
-  --clause: #4e529e;  /* violet, darkened */
-  --phrase: #176560;  /* cyan, darkened */
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #002b36;   /* base03 */
-  --fill: #073642;    /* base02 */
-  --line: #0b3e4b;
-  --ink: #eee8d5;     /* base2 */
-  --text: #93a1a1;    /* base1 */
-  --accent: #58a2d3;  /* blue, lightened */
-  --toast: #eee8d5; --toast-text: #073642;
-  --archive: #b8441a;
+  --paper: var(--nord0);
+  --fill: var(--nord1);
+  --line: var(--nord2);
+  --raised: var(--nord2);
+  --ink: var(--nord6);     /* 10.8:1 */
+  --text: color-mix(in srgb, var(--nord4) 80%, var(--nord3));  /* 7.1:1 */
+  --accent: color-mix(in srgb, var(--nord8) 85%, var(--nord6));  /* 6.8:1, 4.7:1 on the warmest tint */
+  --clause: color-mix(in srgb, var(--nord15) 55%, var(--nord6));
+  --phrase: color-mix(in srgb, var(--nord7) 80%, var(--nord6));
+  --archive: color-mix(in srgb, var(--nord11) 75%, var(--nord0));
+  --on-archive: var(--nord6);
+  --toast: var(--nord6); --toast-text: var(--nord0);
+  --knob: var(--nord6);
   --shadow: 0 10px 30px rgb(0 0 0 / .4);
-  --tint1: 20%; --tint2: 32%; --tint3: 32%;
-  --clause: #b3b6f3;
-  --phrase: #6fd0c7;
+  /* Light tints on dark paper lower the contrast fast, so the dark tints stay faint. */
+  --tone1: color-mix(in srgb, var(--nord13) 9%, var(--paper));
+  --tone2: color-mix(in srgb, var(--nord13) 16%, var(--paper));
+  --tone3: color-mix(in srgb, var(--nord12) 17%, var(--paper));
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -48,7 +67,7 @@ button { cursor: pointer; border: 0; background: none; padding: 0; touch-action:
 summary { list-style: none; cursor: pointer; }
 summary::-webkit-details-marker { display: none; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: .4rem; }
-::selection { background: color-mix(in srgb, var(--accent) 24%, transparent); }
+::selection { background: color-mix(in srgb, var(--accent) 24%, var(--paper)); color: var(--ink); }
 
 /* Toolbar */
 .toolbar {
@@ -80,8 +99,7 @@ summary::-webkit-details-marker { display: none; }
 .segmented span { display: block; white-space: nowrap; padding: .4rem .8rem; font-size: .875rem; line-height: 1.3; border-radius: .55rem; color: var(--text); }
 .segmented small { font-size: .75rem; font-variant-numeric: tabular-nums; margin-left: .2rem; }
 .segmented small:empty { display: none; }
-.segmented :checked + span { background: var(--paper); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
-:root[data-theme="dark"] .segmented :checked + span { background: #0d4352; }
+.segmented :checked + span { background: var(--raised); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
 .segmented :focus-visible + span { outline: 2px solid var(--accent); }
 .segmented:disabled { opacity: .7; }
 
@@ -132,7 +150,7 @@ summary::-webkit-details-marker { display: none; }
 .toggle input { appearance: none; -webkit-appearance: none; margin: 0; flex: none; width: 2.6rem; height: 1.55rem; border-radius: 1rem;
   background: var(--fill); box-shadow: inset 0 0 0 1px var(--line); position: relative; cursor: pointer; transition: background .2s; }
 .toggle input::after { content: ""; position: absolute; top: 2px; left: 2px; width: calc(1.55rem - 4px); height: calc(1.55rem - 4px);
-  border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / .25); transition: transform .2s; }
+  border-radius: 50%; background: var(--knob); box-shadow: 0 1px 3px rgb(0 0 0 / .25); transition: transform .2s; }
 .toggle input:checked { background: var(--accent); box-shadow: none; }
 .toggle input:checked::after { transform: translateX(1.05rem); }
 
@@ -159,9 +177,9 @@ h2 small { font-weight: 400; color: var(--text); font-size: .75rem; letter-spaci
   border-radius: 1px; background: var(--accent); opacity: .45; pointer-events: none; }
 .word.fam-start .face::before { top: .75rem; }
 .word.fam-end .face::before { bottom: .75rem; }
-.word[data-tone="1"] .face { background: color-mix(in srgb, #b58900 var(--tint1), var(--paper)); }
-.word[data-tone="2"] .face { background: color-mix(in srgb, #b58900 var(--tint2), var(--paper)); }
-.word[data-tone="3"] .face { background: color-mix(in srgb, #cb4b16 var(--tint3), var(--paper)); }
+.word[data-tone="1"] .face { background: var(--tone1); }
+.word[data-tone="2"] .face { background: var(--tone2); }
+.word[data-tone="3"] .face { background: var(--tone3); }
 .word:not([data-tone="0"])[data-tone] { --text: var(--ink); }
 
 .word summary { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); column-gap: 1rem; row-gap: .2rem; align-items: baseline;
@@ -200,7 +218,7 @@ details[open] .meaning { margin-top: .5rem; }
 .example p { margin: 0; line-height: 1.55; }
 .translation { font-size: .9375rem; color: var(--text); }
 /* Sentence structure, shown in open rows: the main clause's skeleton is underlined,
-   subordinate clauses are violet, modifiers are teal, and connecting words stay grey. Only colour and
+   subordinate clauses are purple, modifiers are frost green, and connecting words stay grey. Only colour and
    underline change, never the glyphs, so opening a row does not rewrap the sentence. */
 details[open] .sentence { color: var(--text); }
 details[open] .sentence .s-core, .legend .s-core { color: var(--ink); text-decoration: underline 2px color-mix(in srgb, var(--accent) 70%, transparent);
@@ -233,7 +251,7 @@ details[open] .sentence .s-phrase, .legend .s-phrase { color: var(--phrase); }
 .stepper button:active { background: var(--fill); }
 .stepper output { min-width: 1rem; text-align: center; font-size: .875rem; font-weight: 600; color: var(--ink); }
 .restore { min-height: 44px; color: var(--accent); font-size: .9375rem; padding: 0 .5rem; }
-.swipe-action { position: absolute; right: 0; inset-block: 0; min-width: 5.5rem; padding-inline: 1rem; background: var(--archive); color: #fdf6e3; font-weight: 600; visibility: hidden; }
+.swipe-action { position: absolute; right: 0; inset-block: 0; min-width: 5.5rem; padding-inline: 1rem; background: var(--archive); color: var(--on-archive); font-weight: 600; visibility: hidden; }
 .word:is(.dragging, .revealed) .swipe-action { visibility: visible; }
 .word.dragging .face { transform: translateX(var(--slide)); }
 .word.revealed .face { transform: translateX(-5.5rem); transition: transform .18s ease-out; }

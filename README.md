@@ -6,7 +6,7 @@ Tap a row to open it, hear the word, and read its meaning, a long academic examp
 Mark the words you are unsure of with + and archive the ones you know.
 
 It runs on your own computer with Python and SQLite, with no third-party packages and no build step.
-The interface is English, in Solarized Light and Solarized Dark.
+The interface is English, in the Nord palette, light and dark.
 
 ## What it does
 
