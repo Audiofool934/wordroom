@@ -44,9 +44,10 @@
           <fieldset class="choices" id="collection" hidden disabled>
             <legend>Word set</legend>
             <label><input type="radio" name="collection" value="all" checked><span>All words<small>The full word list</small></span><b data-set="all">$total</b></label>
-            <label><input type="radio" name="collection" value="super"><span>Super Picks<small>From 200 Super Picks questions</small></span><b data-set="super"></b></label>
-            <label><input type="radio" name="collection" value="completion"><span>Completion<small>Picks in answer choices</small></span><b data-set="completion"></b></label>
-            <label><input type="radio" name="collection" value="reading"><span>Reading<small>Picks in passages and stems</small></span><b data-set="reading"></b></label>
+            <label><input type="radio" name="collection" value="super"><span>All SuperPicks<small>Completion and reading</small></span><b data-set="super"></b></label>
+            <label hidden><input type="radio" name="collection" value="fill"><span>SuperPicks Completion<small>Stems and answer choices</small></span><b data-set="fill"></b></label>
+            <label><input type="radio" name="collection" value="reading"><span>SuperPicks Reading<small>Passages, stems and answer choices</small></span><b data-set="reading"></b></label>
+            <label><input type="radio" name="collection" value="completion"><span>Completion choices<small>Answer choices only</small></span><b data-set="completion"></b></label>
           </fieldset>
           <label class="toggle" hidden><span>Show meanings in list</span><input id="list-meanings" type="checkbox" role="switch"></label>
           <div class="appearance" hidden>
