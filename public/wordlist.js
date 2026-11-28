@@ -13,8 +13,10 @@
   const endpoint = "/api/wordlist/scores";
   const scores = new Map();
   const collections = new Map();
-  const collectionNames = {all: "Words", super: "Picks", fill: "Completion", completion: "Choices", reading: "Reading"};
+  const collectionNames = {all: "Words", pairs: "Pairs", super: "Picks", fill: "Completion", completion: "Choices", reading: "Reading"};
   const collectionPicker = $("#collection");
+  const hasPairs = Boolean(collectionPicker.querySelector('[data-set="pairs"]'));
+  if (hasPairs) collectionPicker.hidden = false;
   const activeLabel = view.querySelector('input[value="active"] + span').firstChild;
   let collection = "all", collectionLoad;
   let entryCollection = new URLSearchParams(location.search).get("collection");
@@ -24,7 +26,8 @@
     rows: [...section.querySelectorAll(".word")].map(row => {
       const word = row.querySelector("b").textContent;
       const text = (word + " " + row.querySelector(".meaning").textContent).toLowerCase();
-      return {row, word, text};
+      const glosses = row.classList.contains("pair") ? row.querySelector(".example").textContent.toLowerCase() : "";
+      return {row, word, text: text + " " + glosses};
     }),
   }));
   const groupByElement = new Map(groups.map(g => [g.section, g]));
@@ -45,7 +48,8 @@
 
   // Pronunciation uses the device's own English voice, so nothing leaves the phone.
   const speech = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window ? window.speechSynthesis : null;
-  let voice = null, speaking = null;
+  const pairGapMs = 600;
+  let voice = null, playback = null;
   function pickVoice() {
     if (!speech) return;
     const rank = v => (/premium/i.test(v.name) ? 4 : /enhanced/i.test(v.name) ? 3 : 0)
@@ -58,26 +62,47 @@
     pickVoice();
     speech.addEventListener?.("voiceschanged", pickVoice);
   }
+  function clearPlayback() {
+    if (!playback) return;
+    clearTimeout(playback.timer);
+    playback.target.classList.remove("speaking");
+    playback = null;
+  }
   function stopSpeaking() {
-    speaking?.classList.remove("speaking");
-    speaking = null;
+    clearPlayback();
     speech?.cancel();
   }
-  function say(text, button, rate) {
+  function say(parts, target, rate) {
     if (!speech) return;
-    const again = speaking === button;
+    const again = playback?.target === target;
     stopSpeaking();
-    if (again && button?.dataset.speak === "sentence") return; // A second tap stops a sentence.
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    if (voice) utterance.voice = voice;
-    utterance.rate = rate;
-    speaking = button;
-    button?.classList.add("speaking");
-    const done = () => { if (speaking === button) { button?.classList.remove("speaking"); speaking = null; } };
-    utterance.onend = done;
-    utterance.onerror = done;
-    speech.speak(utterance);
+    if (again && target.dataset.speak === "sentence") return; // A second tap stops a sentence.
+    const session = {target, timer: null, utterance: null};
+    playback = session;
+    target.classList.add("speaking");
+
+    function speakPart(index) {
+      if (playback !== session) return;
+      const utterance = new SpeechSynthesisUtterance(parts[index]);
+      session.utterance = utterance;
+      utterance.lang = "en-US";
+      if (voice) utterance.voice = voice;
+      utterance.rate = rate;
+      utterance.onend = () => {
+        if (playback?.utterance !== utterance) return;
+        if (index + 1 === parts.length) clearPlayback();
+        else session.timer = setTimeout(() => speakPart(index + 1), pairGapMs);
+      };
+      utterance.onerror = () => { if (playback?.utterance === utterance) clearPlayback(); };
+      speech.speak(utterance);
+    }
+    speakPart(0);
+  }
+  function sayWord(row) {
+    const head = row.querySelector(".head b");
+    const parts = row.classList.contains("pair")
+      ? Array.from(head.children, term => term.textContent) : [head.textContent];
+    say(parts, row.querySelector(".ipa") || head, .85);
   }
   const speakerIcon = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z"/>'
     + '<path d="M10.3 5.2a.75.75 0 0 1 1.06.04 4 4 0 0 1 0 5.52.75.75 0 1 1-1.1-1.02 2.5 2.5 0 0 0 0-3.48.75.75 0 0 1 .04-1.06z"/></svg>';
@@ -104,7 +129,6 @@
           count.textContent = words.size.toLocaleString("en-US");
           count.closest("label").hidden = false;
         }
-        selectCollection(collection);
         collectionPicker.hidden = false;
       }).catch(error => {
         collectionLoad = null;
@@ -114,7 +138,8 @@
     return collectionLoad;
   }
   function selectCollection(name) {
-    collection = collections.has(name) ? name : "all";
+    collection = (name === "pairs" && hasPairs) || collections.has(name) ? name : "all";
+    document.documentElement.classList.toggle("pair-view", collection === "pairs");
     const radio = [...collectionPicker.elements].find(input => input.value === collection);
     if (radio) radio.checked = true;
     activeLabel.textContent = collection === "all" ? "Words " : collectionNames[collection] + " ";
@@ -125,7 +150,10 @@
       history.replaceState(history.state, "", url);
     }
   }
-  function inCollection(word) { return collection === "all" || collections.get(collection).has(word); }
+  function inCollection(row, word) {
+    if (row.classList.contains("pair")) return collection === "pairs";
+    return collection === "all" || Boolean(collections.get(collection)?.has(word));
+  }
   function selectedView() { return view.querySelector(":checked").value; }
   function selectView(name) {
     const radio = [...view.elements].find(input => input.value === name);
@@ -170,7 +198,7 @@
     if (!row) return;
     const word = row.querySelector("b").textContent;
     selectCollection(position.collection || "all");
-    if (!inCollection(word)) selectCollection("all");
+    if (!inCollection(row, word)) selectCollection("all");
     selectView(position.view || "active");
     query.value = position.query || "";
     filter();
@@ -357,7 +385,7 @@
       let count = 0;
       for (const {row, word, text} of group.rows) {
         const score = scoreOf(word);
-        const included = inCollection(word);
+        const included = inCollection(row, word);
         if (included) totals[viewFor(score)]++;
         const inView = viewFor(score) === range;
         const visible = included && inView && (!term || text.includes(term));
@@ -368,7 +396,7 @@
       if (group.section.hidden === Boolean(count)) group.section.hidden = !count;
       group.link.hidden = !count;
       group.section.style.setProperty("--rows", String(count));
-      const label = plural(count, "word");
+      const label = plural(count, collection === "pairs" ? "pair" : "word");
       if (group.label.textContent !== label) group.label.textContent = label;
       if (count && !first) first = group;
       matches += count;
@@ -387,6 +415,7 @@
     linkFamilies();
     if (!activeGroup || activeGroup.section.hidden) setGroup(first || null);
     if (revealed?.hidden) clearSwipe();
+    if (playback?.target.closest(".word")?.hidden) stopSpeaking();
     return first;
   }
   function applyScore(word, score, revision) {
@@ -422,7 +451,7 @@
       collectionPicker.disabled = false;
       changed = true;
     }
-    if (entryCollection && collections.size && started === interaction) {
+    if (entryCollection && (collections.size || hasPairs) && started === interaction) {
       const requested = entryCollection;
       entryCollection = null;
       const saved = position || localBookmark();
@@ -442,7 +471,7 @@
     if (changed) filter();
     if ((initial || follow) && started === interaction) {
       const target = position || {...localBookmark(), revision: 0};
-      if (target.collection && target.collection !== "all" && !collections.size && !local) return;
+      if (target.collection && target.collection !== "all" && target.collection !== "pairs" && !collections.size && !local) return;
       if (rowFor(target) && (initial || (target.revision ?? 0) > appliedRevision)
           && (target.revision ?? 0) >= (confirmed?.revision ?? 0)) {
         accept(target);
@@ -557,6 +586,10 @@
   view.addEventListener("change", switchView);
   collectionPicker.addEventListener("change", e => {
     entryCollection = null;
+    if (e.target.value === "pairs" || collection === "pairs") {
+      query.value = "";
+      selectView("active");
+    }
     selectCollection(e.target.value);
     switchView(e);
   });
@@ -603,7 +636,7 @@
   function openRelated(id) {
     const row = document.getElementById(id);
     if (!row) return;
-    if (!inCollection(row.querySelector("b").textContent)) selectCollection("all");
+    if (!inCollection(row, row.querySelector("b").textContent)) selectCollection("all");
     if (row.hidden) {
       query.value = "";
       view.querySelector('input[value="' + viewFor(scoreOf(row.querySelector("b").textContent)) + '"]').checked = true;
@@ -612,7 +645,7 @@
     extras(row);
     row.querySelector("details").open = true;
     row.scrollIntoView({block: "start"});
-    say(row.querySelector("b").textContent, row.querySelector(".ipa"), .85);
+    sayWord(row);
     savePlace(bookmark(row), true);
   }
   resume.addEventListener("click", e => {
@@ -648,7 +681,7 @@
     }
     const speaker = e.target.closest("button[data-speak]");
     if (speaker) {
-      say(speaker.closest(".word").querySelector(".sentence").textContent, speaker, .95);
+      say([speaker.closest(".word").querySelector(".sentence").textContent], speaker, .95);
       return;
     }
     const button = e.target.closest("button[data-action]");
@@ -660,8 +693,8 @@
       // Opening a row also pronounces it; this runs inside the tap, which iOS requires for speech.
       if (!row.querySelector("details").open) {
         extras(row);
-        say(row.querySelector("b").textContent, row.querySelector(".ipa"), .85);
-      } else if (speaking && row.contains(speaking)) stopSpeaking();
+        sayWord(row);
+      } else if (playback && row.contains(playback.target)) stopSpeaking();
       // The default summary action runs after the click handler.
       setTimeout(() => { if (row.isConnected) savePlace(bookmark(row), true); }, 0);
     }

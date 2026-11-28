@@ -102,6 +102,17 @@ class WordlistMarksTest(unittest.TestCase):
         choices = self.store.save_wordlist_position({**row, "base": saved["revision"], "collection": "completion"})
         self.assertEqual(choices["collection"], "completion")
 
+    def test_pair_bookmark_and_marks_use_the_whole_pair(self):
+        pair = "turn up / arrive"
+        row = {"row": "p-0123456789abcdef", "collection": "pairs"}
+        self.store.mark_wordlist({"word": pair, "action": "plus", "request_id": "pair-once", "position": row})
+        state = self.store.wordlist_state()
+        self.assertEqual(state["scores"], {pair: [1, 1]})
+        self.assertEqual(state["position"]["row"], row["row"])
+        self.assertEqual(state["position"]["collection"], "pairs")
+        with self.assertRaises(AppError):
+            self.store.save_wordlist_position({"row": row["row"], "collection": "all", "base": 1})
+
     def test_legacy_last_mark(self):
         self.mark("minus")
         self.assertEqual(self.store.wordlist_state()["position"], {"word": "obscure", "view": "archive", "revision": 0})

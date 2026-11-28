@@ -4,6 +4,7 @@ import json
 import re
 from base64 import b64encode
 from contextlib import closing
+from hashlib import sha256
 from html import escape
 from pathlib import Path
 import sqlite3
@@ -158,6 +159,46 @@ def relation_list(relations, word, ids, family=()):
     return f'<dl class="relations">{"".join(parts)}</dl>' if parts else ""
 
 
+def render_pairs(data_dir, links, sections):
+    """Add the private pair book in source order. Each row is one review item."""
+    path = data_dir / "wordlist_pairs.private.json" if data_dir else None
+    if not path or not path.is_file():
+        return ""
+    pairs = json.loads(path.read_text(encoding="utf-8"))
+    for start in range(0, len(pairs), GROUP_SIZE):
+        number = start // GROUP_SIZE + 1
+        group = pairs[start:start + GROUP_SIZE]
+        entries = []
+        for position, pair in enumerate(group, start + 1):
+            left, right = pair["words"]
+            # Bookmarks survive rebuilding the list and inserting new pairs.
+            key = "\n".join(sorted([left.casefold(), right.casefold()]))
+            row_id = "p-" + sha256(key.encode()).hexdigest()[:16]
+            glosses = "".join(
+                f'<p><span lang="en">{escape(word)}</span> · {escape(gloss)}</p>'
+                for word, gloss in zip((left, right), pair["glosses"], strict=True)
+            )
+            pages = "、".join(str(int(page)) for page in pair["pages"])
+            entries.append(
+                f'<article class="word pair" id="{row_id}" data-filled="1"><div class="face"><details><summary>'
+                f'<span class="number">{position:02}</span><span class="head"><b lang="en">'
+                f'<span>{escape(left)}</span> / <span>{escape(right)}</span></b></span>'
+                f'<span class="meaning" lang="zh-CN">{escape(pair["meaning"])}</span></summary>'
+                f'<div class="example" lang="zh-CN">{glosses}<p class="note">原词表第 {pages} 页</p></div>'
+                f'</details>{STEPPER}</div></article>'
+            )
+        links.append(f'<a href="#pairs-{number}" aria-label="Pair group {number}" hidden>{number:02}</a>')
+        sections.append(
+            f'<section class="group" id="pairs-{number}" data-group="{number}" hidden>'
+            f'<h2>六选二精选 · {number:02} <small>{len(group)} pairs</small></h2>'
+            + "\n".join(entries) + '</section>'
+        )
+    if not pairs:
+        return ""
+    return ('<label><input type="radio" name="collection" value="pairs"><span lang="zh-CN">六选二精选'
+            f'<small>按词对复习</small></span><b data-set="pairs">{len(pairs)}</b></label>')
+
+
 def render(source, data_dir=None):
     """The page and its details.
 
@@ -223,10 +264,11 @@ def render(source, data_dir=None):
             + "\n".join(entries) + '</section>'
         )
 
+    pair_choice = render_pairs(data_dir, links, sections)
     total = len(ids)
     template = Template((ROOT / "templates/wordlist.html").read_text(encoding="utf-8"))
     html = template.substitute(
-        group_links="".join(links), word_groups="\n".join(sections), total=f"{total:,}",
+        pair_choice=pair_choice, group_links="".join(links), word_groups="\n".join(sections), total=f"{total:,}",
     )
     return html, details
 

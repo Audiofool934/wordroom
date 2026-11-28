@@ -28,6 +28,11 @@ The interface is English, in the Nord palette, light and dark.
   The Word set menu reads `public/wordlist-super-picks.json`, a local mapping from words to source tags.
   Use `fill` for words in completion stems or choices, `completion` for answer choices specifically, and `reading` for words in reading passages, stems or choices.
   A word can carry multiple tags and shares one score across all sets.
+- **Paired review.**
+  To add 六选二精选 to the Word set menu, put `wordlist_pairs.private.json` in the data directory and rebuild.
+  Supply a JSON array in reading order.
+  Each entry has `words` and `glosses` (two strings each), `meaning` (the shared sense), and `pages` (source page numbers).
+  Score or archive both words together, and resume at the last pair you reviewed.
 - **Speech.**
   Words and sentences are read by the device's own English voice; nothing is sent anywhere.
 
