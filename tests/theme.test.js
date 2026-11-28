@@ -12,7 +12,7 @@ const STORAGE_KEY = "wordroom-theme";
 function boot({stored = null, systemDark = false, storageFails = false} = {}) {
   const storage = new Map(stored === null ? [] : [[STORAGE_KEY, stored]]);
   const root = {dataset: {}};
-  const themeColor = {content: "#fdf6e3"};
+  const themeColor = {content: "#eceff4"};
   const mediaListeners = new Set();
   const windowListeners = new Map();
   const events = [];
@@ -78,7 +78,7 @@ test("system dark preference applies immediately and updates browser chrome", ()
   assert.equal(harness.api.getPreference(), "system");
   assert.equal(harness.api.getTheme(), "dark");
   assert.equal(harness.root.dataset.theme, "dark");
-  assert.equal(harness.themeColor.content, "#002b36");
+  assert.equal(harness.themeColor.content, "#2e3440");
 });
 
 test("manual toggle persists the resolved choice across a reload", () => {
@@ -94,7 +94,7 @@ test("manual toggle persists the resolved choice across a reload", () => {
   const reloaded = boot({stored: first.stored(), systemDark: true});
   assert.equal(reloaded.api.getPreference(), "light");
   assert.equal(reloaded.root.dataset.theme, "light");
-  assert.equal(reloaded.themeColor.content, "#fdf6e3");
+  assert.equal(reloaded.themeColor.content, "#eceff4");
 });
 
 test("system mode follows changes while an explicit choice remains stable", () => {
@@ -131,7 +131,9 @@ test("the dark palette redefines every colour the light palette sets", () => {
   const dark = styles.match(/:root\[data-theme="dark"\]\s*\{([^}]*)\}/);
   assert.ok(light && dark, "Expected light and dark palettes");
   assert.match(dark[1], /color-scheme:\s*dark/);
-  const colours = [...light[1].matchAll(/--([a-z0-9-]+):\s*(#|rgb|[0-9]+%)/g)].map(match => match[1]);
+  // The raw Nord colours are constants; every role built on them must be set again for dark mode.
+  const colours = [...light[1].matchAll(/--([a-z0-9-]+):\s*(#|rgb|var\(--nord|color-mix)/g)]
+    .map(match => match[1]).filter(token => !/^nord\d+$/.test(token));
   assert.ok(colours.length >= 10, "Expected the light palette to set its colours");
   for (const token of colours) {
     assert.match(dark[1], new RegExp(`--${token}:`), `Missing --${token} in the dark palette`);

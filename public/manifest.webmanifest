@@ -7,8 +7,8 @@
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "browser"],
-  "background_color": "#fdf6e3",
-  "theme_color": "#fdf6e3",
+  "background_color": "#eceff4",
+  "theme_color": "#eceff4",
   "lang": "en",
   "categories": ["education", "productivity"],
   "icons": [

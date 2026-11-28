@@ -261,7 +261,7 @@ def main():
 
 
 def render(trail):
-    """A standalone reading page in the word list's Solarized style."""
+    """A standalone reading page in the word list's Nord style."""
     source_index = {p["id"]: (n, s) for n, s in enumerate(trail["sources"], start=1) for p in s["paragraphs"]}
     paragraph_text = {p["id"]: p["text"] for s in trail["sources"] for p in s["paragraphs"]}
     meanings = trail.get("meanings", {})
@@ -300,9 +300,9 @@ def render(trail):
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{escape(trail["title"])} · Wordroom trail</title>
 <style>
-:root {{ color-scheme: light; --paper:#fdf6e3; --fill:#eee8d5; --line:#e3dbc2; --ink:#073642; --text:#586e75; --accent:#1a6998;
+:root {{ color-scheme: light; --paper:#eceff4; --fill:#d8dee9; --line:#d8dee9; --ink:#2e3440; --text:#4c566a; --accent:#4a617f;
   --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif; font-family: -apple-system, system-ui, "PingFang SC", sans-serif; }}
-@media (prefers-color-scheme: dark) {{ :root {{ color-scheme: dark; --paper:#002b36; --fill:#073642; --line:#0b3e4b; --ink:#eee8d5; --text:#93a1a1; --accent:#58a2d3; }} }}
+@media (prefers-color-scheme: dark) {{ :root {{ color-scheme: dark; --paper:#2e3440; --fill:#3b4252; --line:#434c5e; --ink:#eceff4; --text:#bcc3d0; --accent:#97c7d5; }} }}
 * {{ box-sizing: border-box; }} body {{ margin:0; background:var(--paper); color:var(--text); }}
 main {{ max-width: 40rem; margin: 0 auto; padding: max(1.5rem, env(safe-area-inset-top)) 1.25rem 30vh; }}
 .kicker {{ font: 600 .75rem/1.2 ui-monospace, Menlo, monospace; letter-spacing:.08em; text-transform:uppercase; }}
