@@ -200,12 +200,13 @@ details[open] .meaning { margin-top: .5rem; }
 .example p { margin: 0; line-height: 1.55; }
 .translation { font-size: .9375rem; color: var(--text); }
 /* Sentence structure, shown in open rows: the main clause's skeleton is underlined,
-   subordinate clauses are violet, modifiers are teal italic, and connecting words stay grey. */
+   subordinate clauses are violet, modifiers are teal, and connecting words stay grey. Only colour and
+   underline change, never the glyphs, so opening a row does not rewrap the sentence. */
 details[open] .sentence { color: var(--text); }
 details[open] .sentence .s-core, .legend .s-core { color: var(--ink); text-decoration: underline 2px color-mix(in srgb, var(--accent) 70%, transparent);
   text-underline-offset: .22em; text-decoration-skip-ink: none; }
 details[open] .sentence .s-clause, .legend .s-clause { color: var(--clause); }
-details[open] .sentence .s-phrase, .legend .s-phrase { color: var(--phrase); font-style: italic; }
+details[open] .sentence .s-phrase, .legend .s-phrase { color: var(--phrase); }
 .structure { display: grid; gap: .15rem; margin-top: .45rem; padding: .55rem .75rem; border-radius: .7rem;
   background: color-mix(in srgb, var(--fill) 55%, transparent); justify-self: stretch; }
 .legend { display: flex; flex-wrap: wrap; gap: .2rem .9rem; font-size: .75rem; letter-spacing: .03em; }

@@ -16,7 +16,7 @@ The interface is English, in Solarized Light and Solarized Dark.
   The paragraph button in the toolbar shows each word's example sentence under its row, so the list reads like a passage.
   The sentences are long and complex, in the style of GRE reading passages.
 - **Open rows.**
-  An open row shows the sentence with its structure marked: the main clause's skeleton is underlined, subordinate clauses are violet and modifiers are teal italic.
+  An open row shows the sentence with its structure marked: the main clause's skeleton is underlined, subordinate clauses are violet and modifiers are teal.
   Under it come the Chinese translation, a short structure note, the word's meaning, and its family, synonyms, antonyms and related words.
   A related word that is in the list is a link to it.
 - **Scores.**

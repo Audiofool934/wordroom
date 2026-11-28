@@ -94,7 +94,7 @@ class SentenceTests(unittest.TestCase):
                  [" that readers abate", "clause"], [".", "other"]]
         html = build_wordlist.structured(parts, "abate")
         self.assertEqual(html, '<span class="s-phrase">Far from &lt;trivial&gt;</span>, <span class="s-core">the notes</span>'
-                               '<span class="s-clause"> that readers <em>abate</em></span>.')
+                               ' <span class="s-clause">that readers <em>abate</em></span>.')
 
     def test_breakdown_needs_parts_and_skeleton(self):
         self.assertEqual(build_wordlist.breakdown({"en": "x", "zh": "y"}), "")
