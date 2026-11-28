@@ -84,6 +84,13 @@ class WordlistMarksTest(unittest.TestCase):
         cleared = self.store.save_wordlist_position({"row": "w-1-4", "base": marked["revision"]})
         self.assertEqual(cleared.get("collection", "all"), "all")
 
+    def test_completion_question_bookmark_is_distinct_from_choices(self):
+        row = {"row": "w-1-4", "base": 0, "collection": "fill"}
+        saved = self.store.save_wordlist_position(row)
+        self.assertEqual(self.store.wordlist_state()["position"]["collection"], "fill")
+        choices = self.store.save_wordlist_position({**row, "base": saved["revision"], "collection": "completion"})
+        self.assertEqual(choices["collection"], "completion")
+
     def test_legacy_last_mark(self):
         self.mark("minus")
         self.assertEqual(self.store.wordlist_state()["position"], {"word": "obscure", "view": "archive", "revision": 0})

@@ -13,8 +13,7 @@
   const endpoint = "/api/wordlist/scores";
   const scores = new Map();
   const collections = new Map();
-  // Word sets: the whole list, or the Super Picks words and their two subsets. The choice list is in the page.
-  const collectionNames = {all: "Words", super: "Picks", completion: "Completion", reading: "Reading"};
+  const collectionNames = {all: "Words", super: "Picks", fill: "Completion", completion: "Choices", reading: "Reading"};
   const collectionPicker = $("#collection");
   const activeLabel = view.querySelector('input[value="active"] + span').firstChild;
   let collection = "all", collectionLoad;
@@ -90,14 +89,20 @@
         if (response.status === 404) return; // This install has no word sets; the list stays hidden.
         if (!response.ok) throw Error("Couldn't load Super Picks.");
         const membership = await response.json();
-        const sets = {super: new Set(), completion: new Set(), reading: new Set()};
+        const sets = {super: new Set(), fill: new Set(), completion: new Set(), reading: new Set()};
         for (const [word, subsets] of Object.entries(membership)) {
           sets.super.add(word);
-          for (const subset of subsets) sets[subset].add(word);
+          for (const subset of subsets) {
+            if (Object.hasOwn(sets, subset)) sets[subset].add(word);
+          }
         }
         for (const [key, words] of Object.entries(sets)) {
+          const count = collectionPicker.querySelector('[data-set="' + key + '"]');
+          // Older pages and membership files only have the choices and reading filters.
+          if (!count || (key === "fill" && !words.size)) continue;
           collections.set(key, words);
-          collectionPicker.querySelector('[data-set="' + key + '"]').textContent = words.size.toLocaleString("en-US");
+          count.textContent = words.size.toLocaleString("en-US");
+          count.closest("label").hidden = false;
         }
         selectCollection(collection);
         collectionPicker.hidden = false;

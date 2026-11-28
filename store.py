@@ -77,7 +77,7 @@ class Store:
         expanded = payload.get("expanded", False)
         if (not isinstance(row, str) or not re.fullmatch(r"w-[1-9][0-9]{0,4}-[1-9][0-9]{0,4}", row)
                 or view not in ("active", "review", "archive") or not isinstance(query, str)
-                or collection not in ("all", "super", "completion", "reading")
+                or collection not in ("all", "super", "fill", "completion", "reading")
                 or len(query) > 256 or type(expanded) is not bool):
             raise AppError("Invalid reading position.")
         current = cls._wordlist_position(db)

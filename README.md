@@ -25,7 +25,9 @@ The interface is English, in Solarized Light and Solarized Dark.
 - **Your place.**
   Scores sync by spelling and the last row you were on is saved, so another device opens where you stopped.
 - **Optional word sets.**
-  With a `public/wordlist-super-picks.json` file (`{"word": ["completion", "reading"]}`), the menu offers a Word set filter.
+  The Word set menu reads `public/wordlist-super-picks.json`, a local mapping from words to source tags.
+  Use `fill` for words in completion stems or choices, `completion` for answer choices specifically, and `reading` for words in reading passages, stems or choices.
+  A word can carry multiple tags and shares one score across all sets.
 - **Speech.**
   Words and sentences are read by the device's own English voice; nothing is sent anywhere.
 
